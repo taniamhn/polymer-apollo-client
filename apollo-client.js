@@ -1,4 +1,6 @@
-import ApolloClient, { getFragmentDefinitions, createFragmentMap, createBatchingNetworkInterface } from 'apollo-client';
+import { BatchHttpLink } from "apollo-link-batch-http";
+import ApolloClient from "apollo-client";
+import InMemoryCache from "apollo-cache-inmemory";
 import gql from 'graphql-tag';
 
 /**
@@ -12,11 +14,11 @@ const init = (config) => {
 
   // Create the apollo client
   return new ApolloClient({
-    networkInterface: createBatchingNetworkInterface(Object.assign({batchInterval: 10, batchMax: 10}, config)),
-    queryDeduplication: true
+    link: new BatchHttpLink(config),
+    cache: new InMemoryCache()
   });
 }
 
 const namedClient = {};
 
-export { init, gql, getFragmentDefinitions, createFragmentMap, namedClient };
+export { init, gql, namedClient };

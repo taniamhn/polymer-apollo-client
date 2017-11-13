@@ -1,4 +1,5 @@
-var path = require('path');
+// webpack.config.js
+const MinifyPlugin = require("babel-minify-webpack-plugin");
 
 module.exports = {
   entry: './apollo-client.js',
@@ -8,6 +9,9 @@ module.exports = {
     path: __dirname+'/build',
     filename: 'apollo-client.js'
   },
+  plugins: [
+    new MinifyPlugin()
+  ],
   module: {
     rules: [
       {
