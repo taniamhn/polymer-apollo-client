@@ -3,6 +3,7 @@ const webpack = require('webpack');
 const BabiliPlugin = require("babili-webpack-plugin");
 
 module.exports = {
+  mode: 'production',
   entry: './apollo-client.js',
   output: {
     library: 'Apollo',
@@ -11,9 +12,6 @@ module.exports = {
     filename: 'apollo-client.js'
   },
   plugins: [
-    new webpack.DefinePlugin({
-      "process.env": { NODE_ENV: "'production'" }
-    }),
     new BabiliPlugin()
   ],
   module: {

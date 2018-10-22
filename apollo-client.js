@@ -6,4 +6,4 @@ import { onError } from 'apollo-link-error';
 import { ApolloLink } from 'apollo-link';
 import gql from 'graphql-tag';
 
-export { gql, ApolloClient, InMemoryCache, HttpLink, onError, ApolloLink, IntrospectionFragmentMatcher };
+export { gql, ApolloClient, InMemoryCache, HttpLink, onError, createUploadLink, ApolloLink, IntrospectionFragmentMatcher };
