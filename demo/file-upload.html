@@ -6,57 +6,70 @@
 
     <title>File upload</title>
 
-    <script src="../../webcomponentsjs/webcomponents-loader.js"></script>
+    <script src="../../@webcomponents/webcomponentsjs/webcomponents-loader.js"></script>
 
-    <link rel="import" href="../../polymer/polymer.html">
+    <script type="module" src="../../@polymer/polymer/polymer-legacy.js"></script>
 
-    <link rel="import" href="../../iron-demo-helpers/demo-snippet.html">
-    <link rel="import" href="../../iron-demo-helpers/demo-pages-shared-styles.html">
+    <script type="module" src="../../@polymer/iron-demo-helpers/demo-snippet.js"></script>
+    <script type="module" src="../../@polymer/iron-demo-helpers/demo-pages-shared-styles.js"></script>
 
     <script src="../build/apollo-client-subscription-file-upload.js"></script>
 
-    <link rel="import" href="../graphql-client.html">
-    <link rel="import" href="../graphql-query.html">
-    <link rel="import" href="../graphql-mutation.html">
+    <script type="module" src="../graphql-client.js"></script>
+    <script type="module" src="../graphql-query.js"></script>
+    <script type="module" src="../graphql-mutation.js"></script>
 
-    <custom-style>
+    <!-- FIXME(polymer-modulizer):
+        These imperative modules that innerHTML your HTML are
+        a hacky way to be sure that any mixins in included style
+        modules are ready before any elements that reference them are
+        instantiated, otherwise the CSS @apply mixin polyfill won't be
+        able to expand the underlying CSS custom properties.
+        See: https://github.com/Polymer/polymer-modulizer/issues/154
+        -->
+    <script type="module">
+const $_documentContainer = document.createElement('template');
+
+$_documentContainer.innerHTML = `<custom-style>
       <style is="custom-style" include="demo-pages-shared-styles"></style>
-    </custom-style>
+    </custom-style>`;
+
+document.body.appendChild($_documentContainer.content);
+</script>
   </head>
   <body>
-    <graphql-client
-        config='{
-          "uri": "http://localhost:3001/graphql",
-          "transportBatching": true
-        }'
-        apollo-config='{"connectToDevTools": true}'>
+    <graphql-client config='{
+            "uri": "http://localhost:3001/graphql",
+            "transportBatching": true
+          }'
+      apollo-config='{"connectToDevTools": true}'>
     </graphql-client>
-
+  
     <div class="vertical-section-container centered">
       <p>To see this demo in action, you need to download, install, and run the demo server from <a href="https://github.com/jaydenseric/apollo-upload-examples/tree/master/api">here</a>.</p>
-
+  
       <h3>Mutation (upload files)</h3>
-
+  
       <demo-snippet>
         <template>
           <dom-module id="file-upload-demo">
             <template>
               <input type="file" multiple on-change="onFileInputChange">
-
+  
               <graphql-mutation id="multipleUploadMutation" variables="[[variables]]" result="{{data}}">
                 mutation multipleUploadMutationOperationName($files: [Upload!]!) {
-                  multipleUpload(files: $files) {
-                    id
-                    path
-                    filename
-                    mimetype
-                    encoding
-                  }
+                multipleUpload(files: $files) {
+                id
+                path
+                filename
+                mimetype
+                encoding
+                }
                 }
               </graphql-mutation>
-
+  
               <button on-click="upload">Upload</button>
-
+  
               <template is="dom-repeat" items="[[data.multipleUpload]]" as="upload">
                 <ul>
                   <li>ID: [[upload.id]]</li>
@@ -68,13 +81,12 @@
               </template>
             </template>
           </dom-module>
-
+  
           <script>
             class FileUploadDemo extends Polymer.Element {
               static get is() {
                 return 'file-upload-demo';
               }
-
               static get properties() {
                 return {
                   files: {
@@ -87,47 +99,45 @@
                   }
                 };
               }
-
               computeVariables(files) {
                 return {
                   files: files
                 };
               }
-
               upload() {
                 this.$.multipleUploadMutation.execute();
               }
-
               onFileInputChange(e) {
                 this.files = e.target.files;
               }
             }
-
             window.customElements.define(FileUploadDemo.is, FileUploadDemo);
           </script>
         </template>
-
+  
         <file-upload-demo></file-upload-demo>
       </demo-snippet>
-
+  
       <h3>Query (list files)</h3>
-
+  
       <demo-snippet>
         <template>
-          <dom-bind><!-- only necessary for demo -->
-            <template is="dom-bind"><!-- only necessary for demo -->
+          <dom-bind>
+            <!-- only necessary for demo -->
+            <template is="dom-bind">
+              <!-- only necessary for demo -->
               <graphql-query result="{{data}}">
                 query queryOperationName {
-                  uploads {
-                    id
-                    path
-                    filename
-                    mimetype
-                    encoding
-                  }
+                uploads {
+                id
+                path
+                filename
+                mimetype
+                encoding
+                }
                 }
               </graphql-query>
-
+  
               <template is="dom-repeat" items="[[data.uploads]]" as="upload">
                 <ul>
                   <li>ID: [[upload.id]]</li>
@@ -143,4 +153,4 @@
       </demo-snippet>
     </div>
   </body>
-</html>
+  </html>
