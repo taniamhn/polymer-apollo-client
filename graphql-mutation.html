@@ -1,9 +1,18 @@
-<link rel="import" href="graphql-query.html" />
+<link rel="import" href="graphql-query.html">
 
 <!--
-_Note: the current implementation for mutations is in draft, api might change in a future release._
+## GraphQL mutation
+
+_Note: the current implementation for mutations is in draft, API might change in a future release._
 
 The current implementation stays as close to the `<graphql-query>` as possible.
+
+_Note: to use file upload via GraphQL you should import `build/apollo-client-subscription-file-upload.js`
+instead of `build/apollo-client.js`:_
+
+```html
+<script src="bower_components/polymer-apollo-client/build/apollo-client-subscription-file-upload.js"></script>
+```
 
 ```
 <graphql-mutation id="contactMutation" variables="[[contactFormData]]" result="{{contactMutationResult}}">
@@ -28,61 +37,78 @@ mutation SubmitContactForm(
 ```
 
 ```js
-//somewhere after your button has called submit()
+//Somewhere after your button has called submit()
 this.contactFormData = {} //fill the contactMutation with the correct data.
 
 //It will give an error if not everything is filled in correctly.
 this.$.contactMutation.validate()
 
 this.$.contactMutation.execute().then((result) => {
-  //AMAZING RESULT, Mutation has been submitted 🎉
+  //AMAZING RESULT, mutation has been submitted! 🎉
 })
 ```
 
 @group ApolloClient
 @polymer
 @customElement
+@demo demo/full-demo.html Full demo
+@demo demo/file-upload.html File upload
 -->
-<dom-module id="graphql-mutation">
-  <script>
-    class GraphQLMutation extends GraphQLQuery {
-      static get is() { return 'graphql-mutation' }
-      static get properties() {
-        return {
-          hold: {
-            value: true
-          },
-          hostLoading: {
-            value: false
-          }
+
+<script>
+  class GraphQLMutation extends GraphQLQuery {
+    static get is() {
+      return 'graphql-mutation';
+    }
+
+    static get properties() {
+      return {
+        hold: {
+          value: true
+        },
+
+        hostLoading: {
+          type: Boolean,
+          value: false,
+          notify: true
         }
+      };
+    }
+
+    /**
+     * Execute the query/mutation directly
+     * (used in combination with `hold` or with `<graphql-mutation>`).
+     *
+     * @return {Promise}
+     */
+    execute(params) {
+      let validationResult = this.validate(params);
+      if (validationResult.error) {
+        console.error(validationResult.msg, this);
+        return;
       }
 
-      /**
-       * Execute the query/mutation directly (used in combination with hold or with graphql-mutation)
-       *
-       * @return {Promise}
-       */
-      execute() {
-        let validationResult = this.validate();
-        if (validationResult.error) {
-          console.error(validationResult.msg, this);
-          return;
-        }
+      this.hostLoading = true;
+      const mutation = this.query;
+      const { variables } = this;
+      const client = this._getClient();
+      if (!client) {
+        throw new Error(
+          'There is no GraphQL client available. ' +
+          'Initialize one on window.Apollo.client'
+        );
+      }
 
-        this.hostLoading = true;
-
-        return this._getClient().mutate({
-          mutation: this.query,
-          variables: this.variables,
-        }).then((result) => {
+      return client.mutate(Object.assign({ mutation, variables }, params))
+        .then((result) => {
           this.hostLoading = false;
           this.result = result.data;
-        }).catch((error) => {
-          console.log('there was an error sending the query', error);
+        })
+        .catch((error) => {
+          this._handleError(error);
         });
-      }
     }
-    customElements.define(GraphQLMutation.is, GraphQLMutation);
-  </script>
-</dom-module>
+  }
+
+  customElements.define(GraphQLMutation.is, GraphQLMutation);
+</script>

@@ -1,7 +1,11 @@
 import ApolloClient, { getFragmentDefinitions, createFragmentMap } from 'apollo-client';
 import { onError } from 'apollo-link-error';
-import { InMemoryCache } from 'apollo-cache-inmemory';
 import { HttpLink } from 'apollo-link-http';
+import { WebSocketLink } from 'apollo-link-ws';
+import { getMainDefinition } from 'apollo-utilities';
+import { concat, split } from 'apollo-link';
+import { createUploadLink } from 'apollo-upload-client';
+import { InMemoryCache } from 'apollo-cache-inmemory';
 import gql from 'graphql-tag';
 
 const errors = onError(({ graphQLErrors, networkError }) => {
@@ -23,7 +27,29 @@ const init = (config, wsConfig, apolloConfig) => {
     console.warn('Trying to initialize ApolloClient without config.uri property, default config.uri will be used.');
   }
 
-  const link = new HttpLink(config);
+  const httpLink = createUploadLink(config);
+
+  let wsLink, splitLink;
+
+  if (wsConfig) {
+    wsLink = new WebSocketLink(wsConfig);
+  }
+
+  // Using the ability to split links, you can send data to each link
+  // depending on what kind of operation is being sent
+  if (httpLink && wsLink) {
+    splitLink = split(
+      // Split based on operation type
+      ({ query }) => {
+        const { kind, operation } = getMainDefinition(query);
+        return kind === 'OperationDefinition' && operation === 'subscription';
+      },
+      wsLink,
+      errors.concat(httpLink)
+    );
+  }
+
+  const link = splitLink || wsLink || httpLink;
 
   const cache = new InMemoryCache().restore(window.__APOLLO_STATE__);
 

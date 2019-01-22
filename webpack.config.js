@@ -1,14 +1,18 @@
 const path = require('path');
 const webpack = require('webpack');
-const BabiliPlugin = require("babili-webpack-plugin");
+const BabiliPlugin = require('babili-webpack-plugin');
 
 module.exports = {
-  entry: './apollo-client.js',
+  entry: {
+    'apollo-client': path.resolve(__dirname, 'apollo-client.js'),
+    'apollo-client-subscription': path.resolve(__dirname, 'apollo-client-subscription.js'),
+    'apollo-client-subscription-file-upload': path.resolve(__dirname, 'apollo-client-subscription-file-upload.js')
+  },
   output: {
     library: 'Apollo',
     libraryTarget: 'var',
     path: path.resolve(__dirname+'/build'),
-    filename: 'apollo-client.js'
+    filename: '[name].js'
   },
   plugins: [
     new webpack.DefinePlugin({
@@ -24,7 +28,7 @@ module.exports = {
         use: {
           loader: 'babel-loader',
           options: {
-            presets: ["env"]
+            presets: ['env']
           }
         }
       }
